@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  itemid        String
+  shopid        String
+  name          String
+  image         String
+  original_url  String
+  current_price Float
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  price_history PriceHistory[]
+  alert_requests AlertRequest[]
+}
+
+model PriceHistory {
+  id          String   @id @default(cuid())
+  product_id  String
+  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  price       Float
+  recorded_at DateTime @default(now())
+}
+
+model AlertRequest {
+  id                String   @id @default(cuid())
+  product_id        String
+  product           Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  subscription_json String   // Stores the stringified PushSubscription object from the browser
+  target_price      Float
+  is_triggered      Boolean  @default(false)
+  created_at        DateTime @default(now())
+}
+
