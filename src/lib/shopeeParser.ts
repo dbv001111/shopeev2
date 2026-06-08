@@ -129,11 +129,9 @@ export async function fetchShopeeProduct(
     console.error(`Error fetching Shopee product (Shop: ${shopid}, Item: ${itemid}):`, error.message);
     
     if (error.response?.status === 403 || error.response?.status === 405) {
-      if (!cookie) {
-        console.warn(
-          "Shopee API responded with 403/405 Forbidden. Please add a SHOPEE_COOKIE value inside your .env configuration."
-        );
-      }
+      throw new Error(
+        "Hệ thống Shopee chặn yêu cầu (403 Forbidden). Bạn cần cấu hình biến môi trường SHOPEE_COOKIE trong bảng điều khiển Vercel để xác thực và vượt qua bộ chặn này."
+      );
     }
     throw error;
   }
