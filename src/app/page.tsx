@@ -52,8 +52,15 @@ export default function HomePage() {
   const [products, setProducts] = useState<TrackedProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
+  // User session state
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
   useEffect(() => {
-    fetchRecentlyTracked();
+    const initialize = async () => {
+      await fetchUser();
+    };
+    initialize();
 
     // Register service worker on initial load
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -67,6 +74,34 @@ export default function HomePage() {
         });
     }
   }, []);
+
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const result = await res.json();
+      if (res.ok && result.authenticated) {
+        setCurrentUser(result.user);
+      } else {
+        setCurrentUser(null);
+      }
+    } catch (err) {
+      setCurrentUser(null);
+    } finally {
+      setLoadingUser(false);
+      // Fetch products list after user verification settles
+      fetchRecentlyTracked();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setCurrentUser(null);
+      fetchRecentlyTracked();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   const fetchRecentlyTracked = async () => {
     try {
@@ -185,10 +220,41 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="inline-flex items-center text-xs font-medium text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-900/50">
+            <span className="hidden sm:inline-flex items-center text-xs font-medium text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-900/50">
               <Bell className="w-3.5 h-3.5 mr-1 animate-pulse" />
               Browser Push Active
             </span>
+
+            {loadingUser ? (
+              <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+            ) : currentUser ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-slate-400 font-medium hidden md:inline">
+                  {currentUser.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link
+                  href="/login"
+                  className="px-3.5 py-1.5 text-slate-400 hover:text-white rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -302,12 +368,18 @@ export default function HomePage() {
                         ) : (
                           <>
                             <Bell className="w-4 h-4 mr-2" />
-                            Kích Hoạt Theo Dõi
+                            {currentUser ? "Kích Hoạt Theo Dõi" : "Theo Dõi (Tư cách Khách)"}
                           </>
                         )}
                       </button>
                     </div>
                   </div>
+
+                  {!currentUser && (
+                    <p className="text-[10px] text-indigo-400">
+                      💡 Bạn đang thao tác với tư cách khách. Hãy đăng nhập trước khi kích hoạt để liên kết và lưu sản phẩm này vào tài khoản của bạn.
+                    </p>
+                  )}
 
                   {successMsg && (
                     <div className="p-3 bg-emerald-950/40 border border-emerald-900/50 rounded-lg text-emerald-300 text-xs font-medium animate-fade-in flex items-center">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 interface TrackPayload {
   url: string;
@@ -14,6 +15,9 @@ interface TrackPayload {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession();
+    const activeUserId = session?.userId || null;
+
     const body: TrackPayload = await req.json();
     const {
       url,
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
           image: String(image || ""),
           original_url: String(url),
           current_price: priceNum,
+          userId: activeUserId,
         },
       });
 
@@ -80,13 +85,14 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      // 3. If present, update current_price and updated_at.
+      // 3. If present, update current_price and updated_at, and claim ownership if product has none.
       product = await db.product.update({
         where: { id: product.id },
         data: {
           current_price: priceNum,
           name: String(name),
           image: String(image || product.image),
+          ...(activeUserId && !product.userId ? { userId: activeUserId } : {}),
         },
       });
     }

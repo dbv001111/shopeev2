@@ -24,6 +24,19 @@ model Product {
   updated_at    DateTime       @updatedAt
   price_history PriceHistory[]
   alert_requests AlertRequest[]
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id               String          @id @default(cuid())
+  email            String          @unique
+  password         String          
+  resetToken       String?         
+  resetTokenExpiry DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  products         Product[]       
 }
 
 model PriceHistory {

@@ -1,3 +1,6 @@
+export const preferredRegion = ['sin1'];
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import { resolveShortUrl, parseShopeeUrl, fetchShopeeProduct } from "@/lib/shopeeParser";
 

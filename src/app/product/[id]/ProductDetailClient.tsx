@@ -54,13 +54,42 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [chartMounted, setChartMounted] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
   // Set chart mounted after initial render to avoid SSR hydration mismatches in Recharts
   useEffect(() => {
     setChartMounted(true);
     // Suggest target price default at 10% below current price
     const suggestedTarget = Math.round(product.current_price * 0.9);
     setTargetPrice(String(suggestedTarget));
+    fetchUser();
   }, [product.current_price]);
+
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const result = await res.json();
+      if (res.ok && result.authenticated) {
+        setCurrentUser(result.user);
+      } else {
+        setCurrentUser(null);
+      }
+    } catch (err) {
+      setCurrentUser(null);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setCurrentUser(null);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   const handleRegisterAlert = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,13 +186,42 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"
+            className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors text-sm font-medium animate-fade-in"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Quay lại Dashboard</span>
           </Link>
-          <div className="font-bold text-sm tracking-tight text-slate-400">
-            Chi Tiết Sản Phẩm
+          <div className="flex items-center space-x-4">
+            {loadingUser ? (
+              <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
+            ) : currentUser ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-slate-400 font-medium hidden md:inline">
+                  {currentUser.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-semibold border border-slate-800 transition-colors cursor-pointer"
+                >
+                  Đăng xuất
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link
+                  href="/login"
+                  className="px-3.5 py-1.5 text-slate-400 hover:text-white rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+                >
+                  Đăng ký
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -260,12 +318,20 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   >
                     {submittingAlert ? (
                       <Loader2 className="w-4.5 h-4.5 animate-spin" />
-                    ) : (
+                    ) : currentUser ? (
                       "Bật Báo Giá"
+                    ) : (
+                      "Bật Báo (Tư cách Khách)"
                     )}
                   </button>
                 </div>
               </form>
+
+              {!currentUser && (
+                <p className="text-[10px] text-indigo-400">
+                  💡 Bạn đang thao tác với tư cách khách. Hãy đăng nhập trước khi bật báo giá để liên kết và lưu sản phẩm này vào tài khoản của bạn.
+                </p>
+              )}
 
               {error && (
                 <div className="flex items-center space-x-2 p-3 bg-red-950/40 border border-red-900/50 rounded-lg text-red-300 text-xs">

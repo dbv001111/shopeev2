@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 export async function GET() {
   try {
-    // Retrieve the 12 most recently updated products
+    const session = await getSession();
+
+    // Retrieve the 12 most recently updated products for the current user, or anonymous products
     const products = await db.product.findMany({
+      where: {
+        userId: session ? session.userId : null,
+      },
       orderBy: {
         updated_at: "desc",
       },
