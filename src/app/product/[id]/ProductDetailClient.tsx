@@ -54,7 +54,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [chartMounted, setChartMounted] = useState(false);
 
-  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string; username?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
   // Set chart mounted after initial render to avoid SSR hydration mismatches in Recharts
@@ -197,7 +197,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             ) : currentUser ? (
               <div className="flex items-center space-x-3">
                 <span className="text-xs text-slate-400 font-medium hidden md:inline">
-                  {currentUser.email}
+                  @{currentUser.username || currentUser.email}
                 </span>
                 <button
                   onClick={handleLogout}
@@ -216,7 +216,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+                  className="px-3.5 py-1.5 bg-[#EE4D2D] hover:bg-[#d84022] text-white rounded-lg text-xs font-semibold shadow-lg shadow-[#EE4D2D]/20 transition-all"
                 >
                   Đăng ký
                 </Link>
@@ -250,11 +250,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
               <div className="flex flex-wrap gap-4 items-center">
                 {/* Current Price Badge */}
-                <div className="bg-indigo-950/40 border border-indigo-900/50 rounded-xl px-4 py-2.5 flex flex-col justify-center">
+                <div className="bg-[#EE4D2D]/10 border border-[#EE4D2D]/30 rounded-xl px-4 py-2.5 flex flex-col justify-center">
                   <span className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">
                     Giá hiện tại
                   </span>
-                  <span className="text-xl font-extrabold text-indigo-400 tracking-tight">
+                  <span className="text-xl font-extrabold text-[#EE4D2D] tracking-tight">
                     {formatVND(product.current_price)}
                   </span>
                 </div>
@@ -291,7 +291,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             {/* Price Alert Form Box */}
             <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-xl">
               <div className="flex items-center space-x-2">
-                <Bell className="w-5 h-5 text-indigo-500" />
+                <Bell className="w-5 h-5 text-[#EE4D2D]" />
                 <h3 className="font-bold text-slate-200">Cài Đặt Nhận Báo Giảm Giá</h3>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
@@ -304,7 +304,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     type="number"
                     value={targetPrice}
                     onChange={(e) => setTargetPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-[#EE4D2D] rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#EE4D2D]"
                     placeholder="Mức giá báo động (VND)"
                     min="1"
                     required
@@ -314,7 +314,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <button
                     type="submit"
                     disabled={submittingAlert || !targetPrice}
-                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium text-sm rounded-lg flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-600/20"
+                    className="w-full py-2.5 bg-[#EE4D2D] hover:bg-[#d84022] disabled:opacity-50 text-white font-medium text-sm rounded-lg flex items-center justify-center cursor-pointer shadow-lg shadow-[#EE4D2D]/20"
                   >
                     {submittingAlert ? (
                       <Loader2 className="w-4.5 h-4.5 animate-spin" />
@@ -328,7 +328,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </form>
 
               {!currentUser && (
-                <p className="text-[10px] text-indigo-400">
+                <p className="text-[10px] text-[#EE4D2D]">
                   💡 Bạn đang thao tác với tư cách khách. Hãy đăng nhập trước khi bật báo giá để liên kết và lưu sản phẩm này vào tài khoản của bạn.
                 </p>
               )}
@@ -364,7 +364,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 href={`/api/redirect/${product.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#EE4D2D] to-orange-500 hover:from-[#d84022] hover:to-orange-400 text-white rounded-xl font-bold text-sm flex items-center justify-center shadow-xl shadow-[#EE4D2D]/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 <span>Mua Ngay (Affiliate Link)</span>
                 <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
@@ -389,11 +389,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             </div>
             <div className="bg-slate-950/40 border border-slate-900 p-3.5 rounded-xl">
               <span className="block text-[10px] text-slate-500 uppercase font-semibold">Cao Nhất</span>
-              <span className="text-base font-bold text-rose-400 mt-0.5 block">{formatVND(maxPrice)}</span>
+              <span className="text-base font-bold text-[#EE4D2D] mt-0.5 block">{formatVND(maxPrice)}</span>
             </div>
             <div className="bg-slate-950/40 border border-slate-900 p-3.5 rounded-xl">
               <span className="block text-[10px] text-slate-500 uppercase font-semibold">Số lần cập nhật</span>
-              <span className="text-base font-bold text-indigo-400 mt-0.5 block">{product.price_history.length}</span>
+              <span className="text-base font-bold text-[#EE4D2D]/80 mt-0.5 block">{product.price_history.length}</span>
             </div>
             <div className="bg-slate-950/40 border border-slate-900 p-3.5 rounded-xl">
               <span className="block text-[10px] text-slate-500 uppercase font-semibold">Ngày bắt đầu theo dõi</span>
@@ -429,10 +429,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   <Line
                     type="monotone"
                     dataKey="price"
-                    stroke="#6366f1"
+                    stroke="#EE4D2D"
                     strokeWidth={3}
-                    dot={{ r: 3, strokeWidth: 0, fill: "#818cf8" }}
-                    activeDot={{ r: 6, strokeWidth: 0, fill: "#6366f1" }}
+                    dot={{ r: 3, strokeWidth: 0, fill: "#f07050" }}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: "#EE4D2D" }}
                   />
                 </LineChart>
               </ResponsiveContainer>

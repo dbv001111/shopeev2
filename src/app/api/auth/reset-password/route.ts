@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { sanitizeInput } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, password } = await req.json();
+    const body = await req.json();
+    const token = sanitizeInput(body.token);
+    const { password } = body;
 
     if (!token || !password) {
       return NextResponse.json(

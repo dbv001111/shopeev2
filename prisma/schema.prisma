@@ -30,7 +30,8 @@ model Product {
 
 model User {
   id               String          @id @default(cuid())
-  email            String          @unique
+  username         String          @unique // Used for primary login identity
+  email            String          @unique // Used STRICTLY for verification/recovery only
   password         String          
   resetToken       String?         
   resetTokenExpiry DateTime?

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shopee Price Tracker & Affiliate Redirect Dashboard",
-  description: "Paste any Shopee product URL, analyze historical price fluctuations via charts, and register native browser push alerts to get notified instantly on price drops.",
+  title: "shopeev2 — Theo Dõi Giá Shopee",
+  description: "Dán liên kết sản phẩm Shopee, phân tích biến động giá qua biểu đồ lịch sử và nhận thông báo đẩy tức thì khi giá giảm xuống mức mục tiêu.",
 };
 
 export default function RootLayout({

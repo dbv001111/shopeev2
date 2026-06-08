@@ -8,10 +8,11 @@ const JWT_SECRET = new TextEncoder().encode(
 export interface UserSession {
   userId: string;
   email: string;
+  username: string;
 }
 
-export async function createSessionCookie(userId: string, email: string, rememberMe: boolean) {
-  const token = await new SignJWT({ userId, email })
+export async function createSessionCookie(userId: string, email: string, username: string, rememberMe: boolean) {
+  const token = await new SignJWT({ userId, email, username })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(rememberMe ? "30d" : "24h")
@@ -20,8 +21,8 @@ export async function createSessionCookie(userId: string, email: string, remembe
   const cookieStore = await cookies();
   cookieStore.set("auth_token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "strict",
     path: "/",
     maxAge: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60, // 30 days or 24 hours
   });
@@ -37,6 +38,7 @@ export async function getSession(): Promise<UserSession | null> {
     return {
       userId: payload.userId as string,
       email: payload.email as string,
+      username: payload.username as string,
     };
   } catch (error) {
     return null;
@@ -47,8 +49,8 @@ export async function clearSessionCookie() {
   const cookieStore = await cookies();
   cookieStore.set("auth_token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "strict",
     path: "/",
     maxAge: 0,
     expires: new Date(0),

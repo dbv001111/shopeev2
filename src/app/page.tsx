@@ -53,7 +53,7 @@ export default function HomePage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   // User session state
-  const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string; username?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
@@ -204,23 +204,23 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex-1 bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500/30">
+    <div className="flex-1 bg-slate-950 text-slate-100 font-sans selection:bg-[#EE4D2D]/20">
       {/* Dynamic background glow */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-indigo-950/20 via-transparent to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#EE4D2D]/5 via-transparent to-transparent pointer-events-none -z-10" />
 
       {/* Navigation Header */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+            <span className="w-8 h-8 rounded-lg bg-[#EE4D2D] flex items-center justify-center shadow-lg shadow-[#EE4D2D]/30">
               <TrendingDown className="w-4 h-4 text-white" />
             </span>
             <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-              Shopee Radar
+              shopeev2
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <span className="hidden sm:inline-flex items-center text-xs font-medium text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded-full border border-indigo-900/50">
+            <span className="hidden sm:inline-flex items-center text-xs font-medium text-[#EE4D2D] bg-[#EE4D2D]/10 px-2.5 py-1 rounded-full border border-[#EE4D2D]/30">
               <Bell className="w-3.5 h-3.5 mr-1 animate-pulse" />
               Browser Push Active
             </span>
@@ -230,7 +230,7 @@ export default function HomePage() {
             ) : currentUser ? (
               <div className="flex items-center space-x-3">
                 <span className="text-xs text-slate-400 font-medium hidden md:inline">
-                  {currentUser.email}
+                  @{currentUser.username || currentUser.email}
                 </span>
                 <button
                   onClick={handleLogout}
@@ -249,7 +249,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/register"
-                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+                  className="px-3.5 py-1.5 bg-[#EE4D2D] hover:bg-[#d84022] text-white rounded-lg text-xs font-semibold shadow-lg shadow-[#EE4D2D]/20 transition-all"
                 >
                   Đăng ký
                 </Link>
@@ -264,9 +264,9 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="text-center max-w-2xl mx-auto space-y-6">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
-            Theo Dõi Giá Shopee <br />
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              Báo Tin Nhắn Tức Thì
+            <span className="text-white">shopeev2</span> — Theo Dõi Giá <br />
+            <span className="bg-gradient-to-r from-[#EE4D2D] via-orange-400 to-[#EE4D2D] bg-clip-text text-transparent">
+              Nhận Thông Báo Tức Thì
             </span>
           </h1>
           <p className="text-slate-400 text-sm md:text-base">
@@ -286,13 +286,13 @@ export default function HomePage() {
                   placeholder="https://shopee.vn/product/shopid/itemid hoặc https://shope.ee/..."
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="w-full pl-12 pr-32 py-4 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-200 text-sm transition-all placeholder:text-slate-600"
+                  className="w-full pl-12 pr-32 py-4 bg-slate-950 border border-slate-800 focus:border-[#EE4D2D] rounded-xl focus:outline-none focus:ring-1 focus:ring-[#EE4D2D] text-slate-200 text-sm transition-all placeholder:text-slate-600"
                   required
                 />
                 <button
                   type="submit"
                   disabled={loading}
-                  className="absolute right-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-medium text-sm rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-600/20"
+                  className="absolute right-2 px-6 py-2.5 bg-[#EE4D2D] hover:bg-[#d84022] disabled:bg-slate-800 text-white font-medium text-sm rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-[#EE4D2D]/20"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -315,7 +315,7 @@ export default function HomePage() {
             {/* Loading state messages */}
             {loading && (
               <div className="mt-6 text-center text-slate-500 text-xs flex items-center justify-center space-x-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#EE4D2D]" />
                 <span>Đang trích xuất dữ liệu, vượt hệ thống chặn cào Shopee...</span>
               </div>
             )}
@@ -337,7 +337,7 @@ export default function HomePage() {
                     <h3 className="font-semibold text-slate-200 line-clamp-2 text-sm md:text-base leading-snug">
                       {extracted.name}
                     </h3>
-                    <p className="text-indigo-400 font-bold text-lg mt-1">
+                    <p className="text-[#EE4D2D] font-bold text-lg mt-1">
                       {formatVND(extracted.current_price)}
                     </p>
                   </div>
@@ -353,7 +353,7 @@ export default function HomePage() {
                         placeholder="Nhập giá mục tiêu"
                         value={targetPrice}
                         onChange={(e) => setTargetPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-[#EE4D2D] rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-[#EE4D2D]"
                         min="1"
                       />
                     </div>
@@ -361,7 +361,7 @@ export default function HomePage() {
                       <button
                         onClick={handleTrackAndSubscribe}
                         disabled={submittingTrack || !targetPrice}
-                        className="w-full px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-sm rounded-lg flex items-center justify-center cursor-pointer shadow-xl shadow-indigo-600/10 disabled:opacity-50"
+                        className="w-full px-5 py-2.5 bg-[#EE4D2D] hover:bg-[#d84022] text-white font-medium text-sm rounded-lg flex items-center justify-center cursor-pointer shadow-xl shadow-[#EE4D2D]/20 disabled:opacity-50"
                       >
                         {submittingTrack ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -376,7 +376,7 @@ export default function HomePage() {
                   </div>
 
                   {!currentUser && (
-                    <p className="text-[10px] text-indigo-400">
+                    <p className="text-[10px] text-[#EE4D2D]">
                       💡 Bạn đang thao tác với tư cách khách. Hãy đăng nhập trước khi kích hoạt để liên kết và lưu sản phẩm này vào tài khoản của bạn.
                     </p>
                   )}
@@ -397,7 +397,7 @@ export default function HomePage() {
         <section className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl md:text-2xl font-bold tracking-tight flex items-center">
-              <ChartIcon className="w-5 h-5 text-indigo-500 mr-2" />
+              <ChartIcon className="w-5 h-5 text-[#EE4D2D] mr-2" />
               Sản Phẩm Đang Theo Dõi Gần Đây
             </h2>
             <span className="text-xs text-slate-500 font-mono">
@@ -427,7 +427,7 @@ export default function HomePage() {
               {products.map((prod) => (
                 <div
                   key={prod.id}
-                  className="bg-slate-900/20 hover:bg-slate-900/40 border border-slate-900 hover:border-slate-800 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/[0.02] group"
+                  className="bg-slate-900/20 hover:bg-slate-900/40 border border-slate-900 hover:border-[#EE4D2D]/20 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-[#EE4D2D]/5 group"
                 >
                   <div className="space-y-3">
                     <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-950 p-2 border border-slate-900/50 flex items-center justify-center relative">
@@ -438,7 +438,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-200 line-clamp-2 text-xs md:text-sm leading-snug group-hover:text-indigo-400 transition-colors">
+                      <h3 className="font-semibold text-slate-200 line-clamp-2 text-xs md:text-sm leading-snug group-hover:text-[#EE4D2D] transition-colors">
                         {prod.name}
                       </h3>
                     </div>
@@ -447,14 +447,14 @@ export default function HomePage() {
                   <div className="mt-4 pt-3 border-t border-slate-900/80 space-y-3">
                     <div className="flex justify-between items-baseline">
                       <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Giá Hiện Tại</span>
-                      <span className="text-indigo-400 font-bold text-sm md:text-base">
+                      <span className="text-[#EE4D2D] font-bold text-sm md:text-base">
                         {formatVND(prod.current_price)}
                       </span>
                     </div>
 
                     <Link
                       href={`/product/${prod.id}`}
-                      className="w-full py-2 bg-slate-900 group-hover:bg-indigo-600/10 text-slate-300 group-hover:text-indigo-400 font-medium text-xs rounded-lg transition-all flex items-center justify-center"
+                      className="w-full py-2 bg-slate-900 group-hover:bg-[#EE4D2D]/10 text-slate-300 group-hover:text-[#EE4D2D] font-medium text-xs rounded-lg transition-all flex items-center justify-center"
                     >
                       Xem Lịch Sử
                       <ArrowRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
@@ -469,8 +469,8 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 mt-20 py-8 text-center text-xs text-slate-600">
-        <p>© 2026 Shopee Radar. Tất cả các quyền được bảo lưu.</p>
-        <p className="mt-2 text-slate-700">Powered by Next.js & Web Push notifications.</p>
+        <p>© 2026 <span className="text-[#EE4D2D] font-semibold">shopeev2</span>. Tất cả các quyền được bảo lưu.</p>
+        <p className="mt-2 text-slate-700">Powered by Next.js · Turso · Web Push</p>
       </footer>
     </div>
   );
