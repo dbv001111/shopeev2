@@ -114,6 +114,20 @@ function buildChromeHeaders(extra: Record<string, string> = {}): Record<string, 
   return headers;
 }
 
+/**
+ * Fetches a URL, routing through ScraperAPI if SCRAPER_API_KEY is configured.
+ * Otherwise, falls back to direct fetch.
+ */
+async function fetchWithProxy(url: string, options: RequestInit = {}): Promise<Response> {
+  const apiKey = process.env.SCRAPER_API_KEY;
+  if (!apiKey) {
+    return fetch(url, options);
+  }
+
+  const proxyUrl = `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}&keep_headers=true`;
+  return fetch(proxyUrl, options);
+}
+
 /** Normalise a Shopee CDN image hash into a full URL. */
 function toImageUrl(raw: string | undefined | null): string {
   if (!raw) return "https://placehold.co/300?text=No+Image";
@@ -144,7 +158,7 @@ async function fetchViaApiV4(
     "sec-fetch-site": "same-origin",
   });
 
-  const response = await fetch(apiUrl, {
+  const response = await fetchWithProxy(apiUrl, {
     method: "GET",
     headers,
     signal: AbortSignal.timeout(12000),
@@ -196,7 +210,7 @@ async function fetchViaHtmlScraping(
     "Upgrade-Insecure-Requests": "1",
   });
 
-  const response = await fetch(pageUrl, {
+  const response = await fetchWithProxy(pageUrl, {
     method: "GET",
     headers,
     redirect: "follow",
@@ -299,7 +313,7 @@ async function fetchViaApiV2(
     "sec-fetch-site": "same-origin",
   });
 
-  const response = await fetch(apiUrl, {
+  const response = await fetchWithProxy(apiUrl, {
     method: "GET",
     headers,
     signal: AbortSignal.timeout(12000),
