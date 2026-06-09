@@ -56,11 +56,51 @@ export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<{ id: string; email: string; username?: string } | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // Client-side auto-updates & Bookmarklet states
+  const [bookmarkletCode, setBookmarkletCode] = useState("");
+  const [corsBlocked, setCorsBlocked] = useState(false);
+  const [updatingProducts, setUpdatingProducts] = useState<Record<string, boolean>>({});
+
   useEffect(() => {
     const initialize = async () => {
       await fetchUser();
     };
     initialize();
+
+    // Generate Bookmarklet Code dynamically on client-side mount
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin;
+      const code = `javascript:(function(){const m=window.location.href.match(/i\\.(\\d+)\\.(\\d+)/)||window.location.href.match(/\\/product\\/(\\d+)\\/(\\d+)/);if(!m){alert("Vui lòng truy cập trang chi tiết sản phẩm Shopee trước!");return;}const s=m[1],i=m[2];fetch(\`https://shopee.vn/api/v4/item/get?itemid=\${i}&shopid=\${s}\`).then(r=>r.json()).then(d=>{const o=d.data;if(!o){alert("Không lấy được thông tin. Shopee yêu cầu xác minh Captcha. Vui lòng F5 trang Shopee và thử lại!");return;}const name=encodeURIComponent(o.name||""),img=encodeURIComponent(o.image||""),p=o.price?o.price/100000:0;window.location.href=\`${origin}/?action=track&itemid=\${i}&shopid=\${s}&name=\${name}&image=\${img}&price=\${p}&url=\${encodeURIComponent(window.location.href)}\`;}).catch(e=>alert("Lỗi kết nối Shopee API: "+e.message));})();`;
+      setBookmarkletCode(code);
+
+      // Check query params for Bookmarklet redirect
+      const params = new URLSearchParams(window.location.search);
+      const action = params.get("action");
+      if (action === "track") {
+        const itemid = params.get("itemid") || "";
+        const shopid = params.get("shopid") || "";
+        const name = params.get("name") || "";
+        const image = params.get("image") || "";
+        const price = params.get("price") || "";
+        const redirectUrl = params.get("url") || "";
+
+        if (itemid && shopid && name && price) {
+          setExtracted({
+            itemid,
+            shopid,
+            name: decodeURIComponent(name),
+            image: image ? (image.startsWith("http") ? decodeURIComponent(image) : `https://down-vn.img.sgh.io/api/v0/image/${image}`) : "https://placehold.co/300?text=No+Image",
+            current_price: parseFloat(price),
+            original_url: redirectUrl ? decodeURIComponent(redirectUrl) : `https://shopee.vn/product/${shopid}/${itemid}`
+          });
+          const discountPrice = Math.round(parseFloat(price) * 0.9);
+          setTargetPrice(String(discountPrice));
+
+          // Clean URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    }
 
     // Register service worker on initial load
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -103,12 +143,75 @@ export default function HomePage() {
     }
   };
 
+  const runClientSideUpdates = async (productList: TrackedProduct[]) => {
+    if (productList.length === 0) return;
+    let hasCorsError = false;
+
+    // Sequential check with 800ms delay to avoid rate limit
+    for (const prod of productList) {
+      setUpdatingProducts(prev => ({ ...prev, [prod.id]: true }));
+      try {
+        const res = await fetch(`https://shopee.vn/api/v4/item/get?itemid=${prod.itemid}&shopid=${prod.shopid}`);
+        const resData = await res.json();
+        const data = resData.data;
+        if (data && data.price) {
+          const freshPrice = data.price / 100000;
+
+          // Call local update-price API to record new price & notify if drop matches target
+          const updateRes = await fetch("/api/products/update-price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: prod.id,
+              current_price: freshPrice,
+              name: data.name,
+              image: data.image
+            })
+          });
+
+          if (updateRes.ok) {
+            const updateResult = await updateRes.json();
+            if (updateResult.success && updateResult.priceChanged) {
+              setProducts(prev =>
+                prev.map(p =>
+                  p.id === prod.id
+                    ? {
+                        ...p,
+                        current_price: freshPrice,
+                        name: data.name || p.name,
+                        image: data.image ? `https://down-vn.img.sgh.io/api/v0/image/${data.image}` : p.image
+                      }
+                    : p
+                )
+              );
+            }
+          }
+        }
+        // Small delay to simulate human timing
+        await new Promise(r => setTimeout(r, 800));
+      } catch (err: any) {
+        console.warn(`Failed to update product ${prod.id} client-side:`, err.message);
+        if (err.name === "TypeError" || err.message.includes("fetch")) {
+          hasCorsError = true;
+        }
+      } finally {
+        setUpdatingProducts(prev => ({ ...prev, [prod.id]: false }));
+      }
+    }
+
+    if (hasCorsError) {
+      setCorsBlocked(true);
+    }
+  };
+
   const fetchRecentlyTracked = async () => {
     try {
       const res = await fetch("/api/products");
       const result = await res.json();
       if (result.success) {
         setProducts(result.data);
+        // Trigger background client-side updates
+        runClientSideUpdates(result.data);
       }
     } catch (err) {
       console.error("Failed to fetch recently tracked products:", err);
@@ -390,11 +493,66 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+
+            {/* Bookmarklet option card */}
+            <div className="mt-8 pt-8 border-t border-slate-800/40 space-y-4">
+              <h4 className="text-xs font-semibold text-slate-300 flex items-center uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-[#EE4D2D] mr-2" />
+                Cách 2: Sử dụng Dấu trang Bookmarklet (Khuyên dùng - 100% không bị chặn)
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Nếu tính năng "Phân Tích" ở trên bị lỗi do hệ thống Shopee chặn bot, bạn hãy kéo nút màu cam dưới đây vào thanh Bookmark trình duyệt. Sau đó mở link sản phẩm trên Shopee và click vào dấu trang đó.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px] text-slate-500 mt-2">
+                <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-900/80">
+                  <span className="font-bold text-[#EE4D2D] block mb-0.5">BƯỚC 1:</span> Kéo thả nút màu cam bên dưới lên thanh Dấu trang (Bookmarks Bar).
+                </div>
+                <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-900/80">
+                  <span className="font-bold text-[#EE4D2D] block mb-0.5">BƯỚC 2:</span> Mở trang sản phẩm bất kỳ trên Shopee (shopee.vn/...).
+                </div>
+                <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-900/80">
+                  <span className="font-bold text-[#EE4D2D] block mb-0.5">BƯỚC 3:</span> Click vào dấu trang vừa kéo. Trình duyệt tự phân tích và đưa bạn quay lại đây!
+                </div>
+              </div>
+
+              <div className="flex justify-center pt-2">
+                {bookmarkletCode && (
+                  <a
+                    href={bookmarkletCode}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert("Hãy KÉO THẢ nút này vào thanh Dấu trang (Bookmarks Bar) trên trình duyệt của bạn thay vì bấm trực tiếp!");
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-[#EE4D2D] hover:from-orange-600 hover:to-[#d84022] text-white font-bold text-xs rounded-xl shadow-lg shadow-[#EE4D2D]/20 transition-all select-none cursor-move flex items-center"
+                  >
+                    <TrendingDown className="w-4 h-4 mr-2" />
+                    Kéo thả: + Theo dõi Shopee
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Recently Tracked Dashboard Grid */}
         <section className="space-y-6">
+          {corsBlocked && (
+            <div className="p-4 bg-orange-950/30 border border-orange-900/40 rounded-2xl text-xs text-orange-300 leading-relaxed flex items-start space-x-2.5">
+              <span className="mt-0.5">💡</span>
+              <div>
+                <p className="font-semibold mb-1">Mẹo tự động cập nhật giá:</p>
+                <p>
+                  Trình duyệt đang chặn kết nối chéo trang (CORS). Để hệ thống tự động cập nhật giá mới nhất mỗi khi bạn mở trang này, vui lòng bật hoặc cài đặt tiện ích mở rộng 
+                  <a href="https://chromewebstore.google.com/detail/allow-cors-access-contro/lhbhongedombghbgbechangeekcbifgb" target="_blank" rel="noopener noreferrer" className="underline font-semibold ml-1 mr-1 text-[#EE4D2D] hover:text-orange-400">
+                    Allow CORS
+                  </a> 
+                  trên trình duyệt Chrome/Edge của bạn.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="text-xl md:text-2xl font-bold tracking-tight flex items-center">
               <ChartIcon className="w-5 h-5 text-[#EE4D2D] mr-2" />
@@ -446,7 +604,16 @@ export default function HomePage() {
 
                   <div className="mt-4 pt-3 border-t border-slate-900/80 space-y-3">
                     <div className="flex justify-between items-baseline">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Giá Hiện Tại</span>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                        {updatingProducts[prod.id] ? (
+                          <span className="flex items-center text-orange-400 animate-pulse">
+                            <Loader2 className="w-2.5 h-2.5 animate-spin mr-1" />
+                            Đang check...
+                          </span>
+                        ) : (
+                          "Giá Hiện Tại"
+                        )}
+                      </span>
                       <span className="text-[#EE4D2D] font-bold text-sm md:text-base">
                         {formatVND(prod.current_price)}
                       </span>
